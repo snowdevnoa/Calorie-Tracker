@@ -44,6 +44,22 @@ const ItemCtrl = (function () {
 
       return newItem;
     },
+    getItemById: function (id) {
+      let found = null;
+      //Loop through items
+      data.items.forEach(function (item) {
+        if (item.id === id) {
+          found = item;
+        }
+      });
+      return found;
+    },
+    setCurrentItem: function (item) {
+      data.currentItem = item;
+    },
+    getCurrentItem: function () {
+      return data.currentItem;
+    },
     getTotalCalories: function () {
       let total = 0;
 
@@ -69,6 +85,9 @@ const UICtrl = (function () {
   const UISelectors = {
     itemList: '#item-list',
     addBtn: '.add-btn',
+    updateBtn: '.update-btn',
+    deleteBtn: '.delete-btn',
+    backBtn: '.back-btn',
     itemNameInput: '#item-name',
     itemCalorieInput: '#item-calories',
     totalCalories: '.total-calories',
@@ -120,9 +139,31 @@ const UICtrl = (function () {
       document.querySelector(UISelectors.itemNameInput).value = '';
       document.querySelector(UISelectors.itemCalorieInput).value = '';
     },
+    addItemToForm: function () {
+      UICtrl.showEditState();
+      document.querySelector(UISelectors.itemNameInput).value =
+        ItemCtrl.getCurrentItem().name;
+      document.querySelector(UISelectors.itemCalorieInput).value =
+        ItemCtrl.getCurrentItem().calories;
+    },
     showTotalCalories: function (total) {
       document.querySelector(UISelectors.totalCalories).textContent = total;
     },
+    clearEditState: function () {
+      UICtrl.clearInput();
+      document.querySelector(UISelectors.updateBtn).style.display = 'none';
+      document.querySelector(UISelectors.deleteBtn).style.display = 'none';
+      document.querySelector(UISelectors.backBtn).style.display = 'none';
+      document.querySelector(UISelectors.addBtn).style.display = 'block';
+    },
+    showEditState: function () {
+      UICtrl.clearInput();
+      document.querySelector(UISelectors.updateBtn).style.display = 'inline';
+      document.querySelector(UISelectors.deleteBtn).style.display = 'inline';
+      document.querySelector(UISelectors.backBtn).style.display = 'inline';
+      document.querySelector(UISelectors.addBtn).style.display = 'none';
+    },
+
     getSelectors: function () {
       return UISelectors;
     },
@@ -142,6 +183,11 @@ const App = (function (ItemCtrl, UICtrl) {
     document
       .querySelector(UISelectors.addBtn)
       .addEventListener('click', itemAddSubmit);
+
+    //Edit icon click event
+    document
+      .querySelector(UISelectors.itemList)
+      .addEventListener('click', itemUpdateSubmit);
   };
 
   //Add item submit
@@ -172,9 +218,36 @@ const App = (function (ItemCtrl, UICtrl) {
     e.preventDefault();
   };
 
+  //Update item submit
+  const itemUpdateSubmit = function (e) {
+    if (e.target.classList.contains('edit-item')) {
+      //Get list item id
+      const listId = e.target.parentNode.parentNode.id;
+      console.log(listId);
+
+      //Break into an array
+      const listIdArr = listId.split('-');
+
+      //Get the actual id
+      const id = parseInt(listIdArr[1]);
+
+      //Get item
+      const itemToEdit = ItemCtrl.getItemById(id);
+
+      //Set current item
+      ItemCtrl.setCurrentItem(itemToEdit);
+
+      //Add item to form
+      UICtrl.addItemToForm();
+    }
+    e.preventDefault;
+  };
+
   //Public methods
   return {
     init: function () {
+      //Clear edit state / set initial state
+      UICtrl.clearEditState();
       //Fetch items from data structure
       const items = ItemCtrl.getItems();
 
